@@ -1,7 +1,8 @@
 import {Request, Response} from 'express'
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
-import jwt from 'jsonwebtoken';
+import { generateToken } from '../middlewares/authMiddleware';
 
 const prisma = new PrismaClient();
 
@@ -11,19 +12,24 @@ export const criarConta = async (req: Request, res: Response) => {
     try {
 
         if(!email || !password ){
-            return res.status(400).json({ message:'cade os dados amigo?' })
+            return res.status(400).json({ message:'faltando dados: email ou senha.' })
         }
 
-        // email ou usuário já existente
+        // email ou usuário já existente        
         const emailUnique = await prisma.user.findUnique({ where: {email} });
         if(emailUnique){
             return res.status(409).json({ message: "esse email já está sendo usado." })
         }
 
+        // hash de senha - segurança
+        const salt = await bcrypt.genSalt(12);
+        const passwordHash = await bcrypt.hash(password, salt);
+
+        // criando usuário e armazenando no DB
         const create = await prisma.user.create({
             data: {
                 email,
-                password
+                password: passwordHash
             }
         });
 
@@ -42,20 +48,21 @@ export const loginConta = async (req: Request, res: Response) => {
     const {email, password} = req.body;
 
     try{
-        const conta = await prisma.user.findUnique({ where: {email}});
+        const conta = await prisma.user.findUnique({ where: {email} });
 
         if(!conta){
             return res.status(404).json({ message: 'conta não encontrada. crie uma!' })
         }
 
-        // verfica senha
-        if(conta.password !== password){
-            return res.status(400).json({ message: 'a senhas não são iguais.' })
+        // verifica senha - hash de senha
+        const compareHash = await bcrypt.compare(password, conta.password);
+        if(!compareHash){
+            return res.status(401).json({ message: 'senha incorreta. esqueceu a senha?' })
         }
 
-        
+        const token = generateToken({email: conta.email, role: conta.role})
 
-        return res.status(200).json({ message: conta })
+        return res.status(200).json({ message: 'login com sucesso.', token })
     }catch(err){
         console.log(err);
         return res.status(500).json({ message: 'ocorreu um erro ao entrar na conta.' }) 

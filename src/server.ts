@@ -2,6 +2,7 @@ import express from 'express';
 
 import userRoute from './router/userRoute';
 import artistRoute from './router/artistRoute';
+import { verifyToken } from './middlewares/authMiddleware';
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -21,7 +22,7 @@ app.get('/home', (req, res) => {
 })
 
 // rota privada - settings
-app.get('/settings', (req, res) => {
+app.get('/settings', verifyToken, (req, res) => {
     return res.status(200).json({ message: 'rota privada - configurações' })
 })
 

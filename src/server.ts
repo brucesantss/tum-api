@@ -1,7 +1,9 @@
 import express from 'express';
 
-import userRoute from './router/userRoute';
-import artistRoute from './router/artistRoute';
+import userRoutes from './routes/user.routes';
+import artistRoutes from './routes/artist.routes';
+import planRoutes from './routes/plan.routes';
+
 import { verifyToken } from './middlewares/authMiddleware';
 
 const app = express();
@@ -11,10 +13,13 @@ const port = process.env.PORT || 8080;
 app.use(express.json());
 
 // rotas - usuários CRUD
-app.use('/', userRoute); 
+app.use('/', userRoutes); 
 
 // rotas - artista CRUD
-app.use('/', artistRoute)
+app.use('/', artistRoutes)
+
+// rotas - planos
+app.use('/', planRoutes)
 
 // rota pública - home
 app.get('/home', (req, res) => {

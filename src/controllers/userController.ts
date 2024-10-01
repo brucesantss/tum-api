@@ -6,7 +6,7 @@ import { generateToken } from '../middlewares/authMiddleware';
 
 const prisma = new PrismaClient();
 
-export const criarConta = async (req: Request, res: Response) => {
+export const criarContaUsuario = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     try {

@@ -18,9 +18,10 @@ model User {
   email    String @unique
   password String
   role     Role   @default(READER) //3 roles, READER; ARTIST; ADMIN;
-  
+  plan     Plan   @default(FREE)
+
   comicsFav Comic[] // o usuário pode ter comics favoritas 
-  artist Artist? // um usuário pode não ser artista
+  artist    Artist? // um usuário pode não ser artista
 }
 
 model Artist {
@@ -29,7 +30,7 @@ model Artist {
   comics    Comic[] //o artista vai publicar comics
 
   // foreing key, vinculando um User com um Artist - conta de artista
-  userId String @unique 
+  userId String @unique
   user   User   @relation(fields: [userId], references: [id])
 }
 
@@ -52,4 +53,11 @@ enum Role {
   READER
   ARTIST
   ADMIN
+}
+
+enum Plan {
+  FREE
+  BASIC
+  BUSINESS
+  ENTERPRISE
 }

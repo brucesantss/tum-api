@@ -3,16 +3,17 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 import { generateToken } from '../middlewares/authMiddleware';
+import { log } from 'console';
 
 const prisma = new PrismaClient();
 
 export const criarContaUsuario = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     try {
 
-        if(!email || !password ){
-            return res.status(400).json({ message:'faltando dados: email ou senha.' })
+        if(!name || !email || !password ){
+            return res.status(400).json({ message:'faltando dados: nome, email ou senha.' })
         }
 
         // email ou usuário já existente        
@@ -28,6 +29,7 @@ export const criarContaUsuario = async (req: Request, res: Response) => {
         // criando usuário e armazenando no DB
         const create = await prisma.user.create({
             data: {
+                name,
                 email,
                 password: passwordHash
             }
@@ -42,6 +44,35 @@ export const criarContaUsuario = async (req: Request, res: Response) => {
        console.log('erro no console: ', err);
        return res.status(500).json({ message: 'ocorreu um erro ao criar a conta.' })
     }
+}
+
+export const excluirContaUsuario = async (req: Request, res: Response) => {
+
+    try {
+            
+        const { email, password } = req.body;
+
+        const conta = await prisma.user.findFirst({ where: { email } });
+
+        if(!conta){
+            return res.status(404).json({ message: 'conta não encontrada. crie uma!' })
+        }
+
+        // verifica senha - hash de senha
+        const compareHash = await bcrypt.compare(password, conta.password);
+        if(!compareHash){
+            return res.status(401).json({ message: 'senha incorreta. esqueceu a senha?' })
+        }
+
+        const contaExcluida = await prisma.user.delete({ where: { email } });
+        console.log('conta deletada: ', contaExcluida);
+        return res.status(200).json({ message: 'sua conta foi excluída com sucesso.' })
+        
+    } catch (err) {
+        console.log('erro no console: ', err);
+        return res.status(500).json({ message: 'ocorreu um erro ao excluir conta.' })
+    }
+
 }
 
 export const loginConta = async (req: Request, res: Response) => {
@@ -60,9 +91,11 @@ export const loginConta = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'senha incorreta. esqueceu a senha?' })
         }
 
-        const token = generateToken({email: conta.email, role: conta.role})
+        const contaNome = conta.name;
+        req.session.user = {nome: contaNome}
+        
+        return res.status(200).json({ message: `${contaNome}, entrou na conta.` })
 
-        return res.status(200).json({ message: 'login com sucesso.', token })
     }catch(err){
         console.log(err);
         return res.status(500).json({ message: 'ocorreu um erro ao entrar na conta.' }) 

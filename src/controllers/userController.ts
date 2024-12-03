@@ -102,3 +102,31 @@ export const loginConta = async (req: Request, res: Response) => {
     }
 }
 
+export const logoutConta = (req: Request, res: Response) => {
+
+    try {
+
+        if(!req.session.user){
+            res.status(400).json({ message: 'você já está desconectado. fazer login?' });
+            return;
+        }
+        
+        const nomeConta = req.session.user.nome;
+
+    req.session.destroy(err => {
+        if (err) {
+            console.log('erro ao sair da conta.', err);
+            res.status(500).json({ message: 'erro ao sair da conta, tente novamente.' })
+        }
+    });
+
+    res.clearCookie('connect.sid');
+    res.status(200).json({ message: `${nomeConta} saiu da conta.` });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'ocorreu um erro ao sair na conta.' }) 
+    }
+
+}
+

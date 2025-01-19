@@ -21,7 +21,7 @@ model User {
   role     Role    @default(READER) //3 roles, READER; ARTIST; ADMIN;
   plan     Plan    @default(FREE)
 
-  comicsFav Comic[] // o usuário pode ter comics favoritas 
+  comicsFav Comic[] @relation("UserFavorites") // o usuário pode ter comics favoritas 
   artist    Artist? // um usuário pode não ser artista
 
   coCreatedComics Comic[] @relation("CoCreators")
@@ -64,8 +64,8 @@ model Comic {
   artistId          String
   artistOwner       Artist   @relation(fields: [artistId], references: [id])
 
-  // Relacionamento bidirecional: Comics favoritas de um Reader
-  user              User[]
+  favoritedBy User[] @relation("UserFavorites")
+
 }
 
 

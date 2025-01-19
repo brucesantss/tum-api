@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client';
 
-import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt'; 
 
 const prisma = new PrismaClient();
 
@@ -12,7 +12,7 @@ export const criarContaArtista = async (req: Request, res: Response) => {
         const { email, password, biography } = req.body;
 
         if (!email || !password || !biography) {
-            return res.status(400).json({ message: 'cadê os dados amigo?' })
+            return res.status(400).json({ message: 'campos faltando.' })
         }
 
         // pegar o usuário padrão (se existir),  para associar no futuro com conta artista
@@ -27,12 +27,28 @@ export const criarContaArtista = async (req: Request, res: Response) => {
             });
         }
 
+        // verifica senha - hash de senha
+        const compareHash = await bcrypt.compare(password, user.password);
+        if (!compareHash) {
+            return res.status(401).json({ message: 'senha incorreta. esqueceu a senha?' })
+        }
+
+        // verificar se o usuário já é um artista
+        const existingArtist = await prisma.artist.findUnique({
+            where: { userId: user.id },
+        });
+
+        if (existingArtist) {
+            return res.status(400).json({ message: "o usuário já possui uma conta de artista." });
+        }
+
         const artistCreate = await prisma.artist.create({
             data: {
                 biography,
                 userId: user.id
             }
         })
+
 
         await prisma.user.update({
             where: { email },

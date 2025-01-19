@@ -1,9 +1,13 @@
 import express from 'express';
+import cors from 'cors';
 
 import userRoutes from './routes/user.routes';
 import artistRoutes from './routes/artist.routes';
 import planRoutes from './routes/plan.routes';
 import paymentRoutes from './routes/payment.routes';
+import adminRoutes from './routes/admin.routes';
+import comicRoutes from './routes/comic.routes';
+
 
 import { verifyToken } from './middlewares/authMiddleware';
 import { sessionConfig } from './middlewares/sessionMiddleware';
@@ -15,6 +19,10 @@ const port = process.env.PORT || 8080;
 app.use(express.json());
 app.use(sessionConfig);
 
+app.use(cors({
+    origin: 'http://localhost:5173'
+}))
+
 // rotas - usuários CRUD
 app.use('/', userRoutes); 
 
@@ -23,6 +31,12 @@ app.use('/', artistRoutes)
 
 // rotas - planos
 app.use('/', planRoutes)
+
+// rotas - admin
+app.use('/', adminRoutes)
+
+// rotas - comic
+app.use('/', comicRoutes)
 
 // rota pública - pagamento mercado pago
 app.use('/', paymentRoutes)

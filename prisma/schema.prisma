@@ -14,15 +14,17 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid())
+  id       String  @id @default(uuid())
   name     String? @unique
-  email    String @unique
+  email    String  @unique
   password String
-  role     Role   @default(READER) //3 roles, READER; ARTIST; ADMIN;
-  plan     Plan   @default(FREE)
+  role     Role    @default(READER) //3 roles, READER; ARTIST; ADMIN;
+  plan     Plan    @default(FREE)
 
   comicsFav Comic[] // o usuário pode ter comics favoritas 
   artist    Artist? // um usuário pode não ser artista
+
+  coCreatedComics Comic[] @relation("CoCreators")
 }
 
 model Artist {
@@ -36,18 +38,36 @@ model Artist {
 }
 
 model Comic {
-  id    Int    @id @default(autoincrement())
-  title String
-  genre String
-  views Int    @default(0)
+  id                Int      @id @default(autoincrement())
+  title             String
+  isOriginalTum     Boolean
 
-  // vinculando as comics com o artista que publicou
-  artistId String
-  artist   Artist @relation(fields: [artistId], references: [id])
+  // Co-criadores da Comic
+  coCreators        User[]   @relation("CoCreators")
 
-  // biodirecional prisma - comics favoritas de READER
-  user User[]
+  artist            String?  @default("") // Nome do artista (opcional)
+  author            String?  @default("") // Nome do autor (opcional)
+
+  genre             String   // Gênero principal
+  genreSecond       String?  @default("") // Gênero secundário (opcional, vazio por padrão)
+
+  dayChapterRelease String?  // Dia de lançamento de capítulos
+
+  synopsis          String   @db.VarChar(2000) // Sinopse (limite de 2000 caracteres)
+
+  banner            String?  // Imagem do banner da Comic
+  thumbnail         String?  // Miniatura da Comic
+
+  views             Int      @default(0) // Contador de visualizações (inicia em 0)
+
+  // Relacionamento com o artista que publicou a Comic
+  artistId          String
+  artistOwner       Artist   @relation(fields: [artistId], references: [id])
+
+  // Relacionamento bidirecional: Comics favoritas de um Reader
+  user              User[]
 }
+
 
 // roles do TUM
 enum Role {

@@ -88,3 +88,22 @@ export const createComic = async (req: Request, res: Response) => {
     }
 };
 
+export const listarComics = async (req: Request, res: Response) => {
+
+    try {
+        
+        const comics = await prisma.comic.findMany();
+
+        if(!comics){
+            return res.status(400).json({ message: 'não foi possível trazer as comics.' })
+        }
+
+        return res.status(200).json({ message: comics })
+
+
+    } catch (err) {
+       return res.status(500).json({ message: 'erro no servidor.' }) 
+    }
+
+}
+

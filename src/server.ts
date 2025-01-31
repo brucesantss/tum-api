@@ -7,9 +7,25 @@ import planRoutes from './routes/plan.routes';
 import paymentRoutes from './routes/payment.routes';
 import adminRoutes from './routes/admin.routes';
 import comicRoutes from './routes/comic.routes';
+import favoriteRoutes from './routes/favorites.routes';
 
+// S3 SETUP
+import { S3Client } from "@aws-sdk/client-s3";
+import 'dotenv/config';
 
-import { verifyToken } from './middlewares/authMiddleware';
+const bucketName = process.env.BUCKET_NAME;
+const bucketRegion = process.env.BUCKET_REGION; 
+const accessKey = process.env.ACCESS_KEY;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+const s3 = new S3Client({
+    credentials: {
+        accessKeyId: accessKey,
+        secretAccessKey: secretAccessKey
+    },
+    region: bucketRegion
+})
+
 import { sessionConfig } from './middlewares/sessionMiddleware';
 
 const app = express();
@@ -23,42 +39,13 @@ app.use(cors({
     origin: 'http://localhost:5173'
 }))
 
-// rotas - usuários CRUD
-app.use('/', userRoutes); 
-
-// rotas - artista CRUD
-app.use('/', artistRoutes)
-
-// rotas - planos
-app.use('/', planRoutes)
-
-// rotas - admin
-app.use('/', adminRoutes)
-
-// rotas - comic
-app.use('/', comicRoutes)
-
-// rota pública - pagamento mercado pago
-app.use('/', paymentRoutes)
-
-// rota pública - home
-app.get('/home', (req, res) => {
-    return res.status(200).json({ message: 'bem-vindo a home do TUM.' })
-})
-
-// rota privada - settings
-app.get('/settings', (req, res) => {
-    if (!req.session.user) {
-        res.status(401).json({ message: "settings sem acesso: faça login." });
-        return;
-    }
-
-    console.log('acessou o dashboard, ', req.session);
-    res.status(200).json({ message: `settings da conta: ${req.session.user.nome}` });
-})
-
-//payment
-app.use('/', paymentRoutes);
+app.use('/usuarios', userRoutes); 
+app.use('/artistas', artistRoutes)
+app.use('/planos', planRoutes)
+app.use('/admin', adminRoutes)
+app.use('/comics', comicRoutes)
+app.use('/favoritos', favoriteRoutes)
+app.use('/pagamentos', paymentRoutes)
 
 app.listen(port, () => {
     console.log(`http://localhost:${port}`);

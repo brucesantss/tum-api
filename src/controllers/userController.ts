@@ -127,6 +127,41 @@ export const logoutConta = (req: Request, res: Response) => {
 
 }
 
+export const trocarSenha = async (req: Request, res: Response) => {
+
+    try {
+        
+        const { id } = req.params;
+        const { password, newPassword } = req.body;
+
+        const usuario = await prisma.user.findFirst({ where: {id} });
+
+        if(!usuario){
+
+            return res.status(404).json({ message: 'usuário não encontrado.' });
+
+        }
+
+        const compareHash = await bcrypt.compare(password, usuario.password);
+        if(!compareHash){
+            return res.status(400).json({ message: 'senha incorreta. tente novamente!' })
+        }
+
+        // hash de senha - segurança
+        const salt = await bcrypt.genSalt(12);
+        const hashNovaSenha = await bcrypt.hash(newPassword, salt);
+
+        const usuarioNovaSenha = await prisma.user.update({ where: {id: usuario.id}, data: {password: hashNovaSenha} });
+
+        return res.status(200).json({ message: 'senha atualizada. faça login!' })
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'ocorreu um erro ao trocar de senha.' })
+    }
+
+}
+
 export const getAllUsers = async (req: Request, res: Response) => {
 
     try {

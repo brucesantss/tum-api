@@ -8,17 +8,21 @@ export const addFavorite = async (req: Request, res: Response) => {
 
     try {
         const user = await prisma.user.findUnique({ where: { id: userId } });
-        const comic = await prisma.comic.findUnique({ where: { id: comicId } });
+        const comic = await prisma.comic.findUnique({ where: { id: parseInt(comicId, 10) } });
 
-        if (!user || !comic) {
-            return res.status(404).json({ message: 'Usuário ou comic não encontrado.' });
+        if (!user) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        if (!comic) {
+            return res.status(404).json({ message: 'Comic não encontrada.' });
         }
 
         await prisma.user.update({
             where: { id: userId },
             data: {
                 comicsFav: {
-                    connect: { id: comicId },
+                    connect: { id: parseInt(comicId, 10) },
                 },
             },
         });
@@ -29,6 +33,7 @@ export const addFavorite = async (req: Request, res: Response) => {
         return res.status(500).json({ message: 'Erro ao adicionar favorito.' });
     }
 };
+
 
 export const removeFavorite = async (req: Request, res: Response) => {
     const { userId, comicId } = req.body;

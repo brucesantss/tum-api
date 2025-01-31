@@ -10,7 +10,7 @@ import comicRoutes from './routes/comic.routes';
 import favoriteRoutes from './routes/favorites.routes';
 
 // S3 SETUP
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import 'dotenv/config';
 
 const bucketName = process.env.BUCKET_NAME;

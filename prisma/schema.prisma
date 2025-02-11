@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,21 +12,23 @@ model User {
   name     String? @unique
   email    String  @unique
   password String
-  role     Role    @default(READER) //3 roles, READER; ARTIST; ADMIN;
+  role     Role    @default(READER) // 3 roles: READER, ARTIST, ADMIN
   plan     Plan    @default(FREE)
 
   comicsFav Comic[]  @relation("UserFavorites") // o usuário pode ter comics favoritas 
-  artist    Artist? // um usuário pode não ser artista
+  artist    Artist?  // um usuário pode não ser artista
 
   coCreatedComics Comic[] @relation("CoCreators")
+
+  profileImage Image? @relation("UserProfileImage") // Foto de perfil do usuário
 }
 
 model Artist {
   id        String  @id @default(uuid())
   biography String
-  comics    Comic[] //o artista vai publicar comics
+  comics    Comic[] // o artista vai publicar comics
 
-  // foreing key, vinculando um User com um Artist - conta de artista
+  // Foreign key, vinculando um User com um Artist - conta de artista
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
 }
@@ -55,21 +51,45 @@ model Comic {
 
   synopsis          String   @db.VarChar(2000) // Sinopse (limite de 2000 caracteres)
 
-  banner            String?  // Imagem do banner da Comic
-  thumbnail         String?  // Miniatura da Comic
-
   views             Int      @default(0) // Contador de visualizações (inicia em 0)
 
   // Relacionamento com o artista que publicou a Comic
   artistId          String
   artistOwner       Artist   @relation(fields: [artistId], references: [id])
 
-  usersFav  User[]   @relation("UserFavorites")
+  usersFav User[] @relation("UserFavorites")
 
+  // Imagens associadas à Comic (banner, thumbnails, etc.)
+  images Image[] @relation("ComicImages")
 }
 
+model Image {
+  id       String  @id @default(uuid())
+  url      String  @unique // URL pública da imagem no S3
+  path     String  @unique // Caminho do arquivo no S3 (ex: uploads/profile/abc123.jpg)
+  type     ImageType // Tipo da imagem (PROFILE, COMIC_BANNER, COMIC_THUMBNAIL, etc.)
+  mimeType String
+  size     Int
+  width    Int?
+  height   Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-// roles do TUM
+  // Relacionamentos opcionais (a imagem pode ser de um usuário ou de uma comic)
+  userId  String? @unique // Se for imagem de perfil
+  user    User?   @relation("UserProfileImage", fields: [userId], references: [id])
+
+  comicId Int? // Se for imagem de comic
+  comic   Comic? @relation("ComicImages", fields: [comicId], references: [id])
+}
+
+enum ImageType {
+  PROFILE
+  COMIC_BANNER
+  COMIC_THUMBNAIL
+  OTHER
+}
+
 enum Role {
   READER
   ARTIST
